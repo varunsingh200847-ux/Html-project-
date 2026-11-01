@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>Neighbourhood Carpool Matching</title>
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+    <style>
+        :root {
+            --bg: #eef3f6;
+            --card: #fff;
+            --ink: #12303b;
+            --mute: #5b727b;
+            --line: #d3dfe4;
+            --go: #1f8a70;
+            --go-t: #dff2ec;
+            --warn: #b9770e;
+            --warn-t: #fbefd5;
+            --bad: #b83a2e;
+            --bad-t: #f8e0dd;
+            --accent: #12303b;
+            --on: #fff;
+            box-sizing: border-box;
+            padding-top: env(safe-area-inset-top, 0px);
+            padding-bottom: env(safe-area-inset-bottom, 0px)
+        }
+
+        @media (prefers-color-scheme:dark) {
+            :root:not([data-theme="light"]) {
+                --bg: #0f1e24;
+                --card: #172a32;
+                --ink: #e6f0f3;
+                --mute: #93aab3;
+                --line: #2a424c;
+                --go: #4cc3a3;
+                --go-t: #16372f;
+                --warn: #e8b04a;
+                --warn-t: #3a2f14;
+                --bad: #f08a7e;
+                --bad-t: #3d1f1b;
+                --accent: #4cc3a3;
+                --on: #0f1e24
+            }
+        }
+
+        :root[data-theme="dark"] {
+            --bg: #0f1e24;
+            --card: #172a32;
+            --ink: #e6f0f3;
+            --mute: #93aab3;
+            --line: #2a424c;
+            --go: #4cc3a3;
+            --go-t: #16372f;
+            --warn: #e8b04a;
+            --warn-t: #3a2f14;
+            --bad: #f08a7e;
+            --bad-t: #3d1f1b;
+            --accent: #4cc3a3;
+            --on: #0f1e24
+        }
+
+        * {
+            box-sizing: border-box
+        }
+
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--ink);
+            font: 16px/1.5 "Atkinson Hyperlegible", system-ui, sans-serif
+        }
+
+        header {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            border-bottom: 2px solid var(--ink)
+        }
+
+        h1 {
+            font-size: 1.25rem;
+            margin: 0
+        }
+
+        h2 {
+            font-size: 1.4rem;
+            margin: 0 0 4px
+        }
+
+        h3 {
+            font-size: 1.05rem;
+            margin: 0
+        }
+
+        .sub {
+            color: var(--mute);
+            margin: 0 0 16px
+        }
+
+        nav {
+            display: flex;
+            gap: 4px;
+            overflow-x: auto;
+            padding: 10px 20px 0;
+            border-bottom: 1px solid var(--line)
+        }
+
+        nav button {
+            background: none;
+            border: 0;
+            border-bottom: 3px solid transparent;
+            padding: 8px 12px;
+            font: inherit;
+            color: var(--mute);
+            cursor: pointer;
+            white-space: nowrap
+        }
+
+        nav button[aria-current=true] {
+            color: var(--ink);
+            border-color: var(--go);
+            font-weight: 700
+        }
+
+        main {
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 20px
+        }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 12px
+        }
+
+        .row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center
+        }
+
+        .sp {
+            justify-content: space-between
+        }
+
+        label {
+            display: block;
+            font-weight: 700;
+            margin: 10px 0 4px
+        }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            font: inherit;
+            color: var(--ink);
+            background: var(--bg);
+            border: 1px solid var(--line);
+            border-radius: 6px;
+            padding: 8px
+        }
+
+        .chk {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            font-weight: 400;
+            margin: 6px 0
+        }
+
+        .chk input {
+            width: auto
+        }
+
+        .days label {
+            display: inline-flex;
+            gap: 4px;
+            align-items: center;
+            margin: 0 10px 0 0;
+            font-weight: 400
+        }
+
+        .days input {
+            width: auto
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px
+        }
+
+        @media(max-width:560px) {
+            .grid {
+                grid-template-columns: 1fr
+            }
+        }
+
+        button.b {
+            font: inherit;
+            font-weight: 700;
+            border-radius: 6px;
+            padding: 8px 14px;
+            border: 1px solid var(--ink);
+            background: var(--card);
+            color: var(--ink);
+            cursor: pointer
+        }
+
+        button.b.p {
+            background: var(--accent);
+            color: var(--on);
+            border-color: var(--accent)
+        }
+
+        button.b.d {
+            color: var(--bad);
+            border-color: var(--bad)
+        }
+
+        button.b.s {
+            padding: 4px 10px;
+            font-size: .9rem
+        }
+
+        button:focus-visible,
+        input:focus-visible,
+        select:focus-visible,
+        textarea:focus-visible {
+            outline: 3px solid var(--warn);
+            outline-offset: 2px
+        }
+
+        .tag {
+            display: inline-block;
+            font-size: .85rem;
+            padding: 1px 8px;
+            border-radius: 99px;
+            background: var(--bg);
+            border: 1px solid var(--line)
+        }
+
+        .ok {
+            background: var(--go-t);
+            color: var(--go);
+            border-color: var(--go)
+        }
+
+        .wa {
+            background: var(--warn-t);
+            color: var(--warn);
+            border-color: var(--warn)
+        }
+
+        .no {
+            background: var(--bad-t);
+            color: var(--bad);
+            border-color: var(--bad)
+        }
+
+        .path {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 4px;
+            margin: 8px 0;
+            font-size: .9rem
+        }
+
+        .path span {
+            padding: 2px 8px;
+            border-radius: 4px;
+            background: var(--bg);
+            color: var(--mute)
+        }
+
+        .path span.on {
+            background: var(--go);
+            color: var(--on);
+            font-weight: 700
+        }
+
+        .path i {
+            color: var(--mute);
+            font-style: normal
+        }
+
+        .bar {
+            height: 8px;
+            border-radius: 4px;
+            background: var(--line);
+            overflow: hidden;
+            width: 120px
+        }
+
+        .bar div {
+            height: 100%;
+            background: var(--go)
+        }
+
+        .steps {
+            display: flex;
+            gap: 4px;
+            margin: 12px 0
+        }
+
+        .steps div {
+            flex: 1;
+            text-align: center;
+            font-size: .85rem;
+            padding: 6px 2px;
+            border-top: 4px solid var(--line);
+            color: var(--mute)
+        }
+
+        .steps div.done {
+            border-color: var(--go);
+            color: var(--ink);
+            font-weight: 700
+        }
+
+        .stars button {
+            background: none;
+            border: 0;
+            font-size: 1.6rem;
+            cursor: pointer;
+            color: var(--line)
+        }
+
+        .stars button.f {
+            color: var(--warn)
+        }
+
+        .empty {
+            text-align: center;
+            color: var(--mute);
+            padding: 32px 12px
+        }
+
+        #toast {
+            position: fixed;
+            left: 50%;
+            transform: translateX(-50%);
+            bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+            background: var(--ink);
+            color: var(--bg);
+            padding: 10px 16px;
+            border-radius: 8px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity .2s;
+            max-width: 90%
+        }
+
+        #toast.show {
+            opacity: 1
+        }
+
+        dialog {
+            border: 1px solid var(--ink);
+            border-radius: 10px;
+            background: var(--card);
+            color: var(--ink);
+            max-width: 420px;
+            width: 92%
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>Neighbourhood Carpool Matching</h1>
+        <div class="row"><label for="role" style="margin:0">Viewing as</label>
+            <select id="role" style="width:auto"
+                onchange="S.role=this.value;S.view=S.role==='mod'?'mod':'verify';render()">
+                <option value="user">Commuter</option>
+                <option value="mod">Moderator</option>
+            </select>
+        </div>
+    </header>
+    <nav id="nav" aria-label="Sections"></nav>
+    <main id="app"></main>
+    <div id="toast" role="status" aria-live="polite"></div>
+    <dialog id="dlg">
+        <form method="dialog" id="dform"></form>
+    </dialog>
+
+    <script>
+        const ZONES = ["Mountains", "Riverside", "Old Town", "Hillcrest", "Tech Park", "City Centre"];
+
+        const STEPS = ["Scheduled", "Pickup", "On the way", "Completed"];
+        const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri"];
+        const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+        const mins = t => { const [a, b] = t.split(":"); return +a * 60 + +b };
+
+        const S = {
+            role: "user", view: "verify",
+            me: { name: "", id: "", verified: "none", route: null, prefs: { noSmoke: true, quiet: false, womenOnly: false } },
+            members: [
+                { id: "m1", name: "Priya S.", g: "F", role: "driver", ok: true, rating: 4.8, n: 42, path: ["Maple Park", "Riverside", "Old Town", "City Centre"], time: "08:10", days: ["Mon", "Tue", "Wed", "Thu", "Fri"], smoker: false, quiet: true, seats: 3 },
+                { id: "m2", name: "Arjun M.", g: "M", role: "driver", ok: true, rating: 4.5, n: 18, path: ["Riverside", "Old Town", "Tech Park"], time: "08:30", days: ["Mon", "Wed", "Fri"], smoker: false, quiet: false, seats: 2 },
+                { id: "m3", name: "Karan T.", g: "M", role: "driver", ok: true, rating: 4.1, n: 9, path: ["Maple Park", "Old Town", "City Centre"], time: "09:05", days: ["Tue", "Thu"], smoker: true, quiet: false, seats: 3 },
+                { id: "m4", name: "Neha R.", g: "F", role: "rider", ok: true, rating: 4.9, n: 27, path: ["Maple Park", "Riverside", "Old Town"], time: "08:15", days: ["Mon", "Tue", "Wed", "Thu", "Fri"], smoker: false, quiet: true, seats: 1 },
+                { id: "m5", name: "Sam D.", g: "M", role: "rider", ok: true, rating: 4.4, n: 6, path: ["Hillcrest", "Old Town", "City Centre"], time: "08:20", days: ["Mon", "Tue", "Thu"], smoker: false, quiet: false, seats: 1 }],
+            reqs: [], reports: [], blocked: [], queue: [{ id: "q1", name: "Dev K.", doc: "Driving licence ••4821" }], log: [], _n: 1
+        };
+
+        const $ = s => document.querySelector(s);
+        function toast(t) { const e = $("#toast"); e.textContent = t; e.classList.add("show"); clearTimeout(toast.t); toast.t = setTimeout(() => e.classList.remove("show"), 2400) }
+        const mem = id => S.members.find(m => m.id === id);
+        const tabs = () => S.role === "mod" ? [["mod", "Moderation"]] : [["verify", "Verify"], ["route", "Route & schedule"], ["match", "Matches"], ["trips", "Trips"], ["hist", "History"]];
+
+        function score(m) {
+            const r = S.me.route, p = S.me.prefs; if (!r || m.ok === false || m.susp || S.blocked.includes(m.id)) return null;
+            if (m.role === r.role) return null;
+            if (p.womenOnly && m.g !== "F") return null;
+            const i = m.path.indexOf(r.from), j = m.path.indexOf(r.to); if (i < 0 || j <= i) return null;
+            const d = Math.abs(mins(m.time) - mins(r.time)); let s = 50;
+            s += d <= 10 ? 30 : d <= 20 ? 20 : d <= 30 ? 10 : 0;
+            s += Math.round(10 * r.days.filter(x => m.days.includes(x)).length / Math.max(r.days.length, 1));
+            s += 10 - (p.noSmoke && m.smoker ? 5 : 0) - (p.quiet && !m.quiet ? 5 : 0);
+            return Math.min(s, 100);
+        }
+        function render() {
+            $("#nav").innerHTML = tabs().map(([k, l]) => `<button aria-current="${S.view === k}" onclick="S.view='${k}';render()">${l}</button>`).join("");
+            const v = { verify, route, match, trips, hist, mod }[S.view]; $("#app").innerHTML = v();
+        }
+
+
+        function verify() {
+            const m = S.me;
+            if (m.verified === "verified") return `<h2>Identity verified</h2><p class="sub">You can now request or offer rides.</p><div class="card"><span class="tag ok">Verified</span> <b>${esc(m.name)}</b><p class="sub" style="margin:8px 0 0">Next, add your <a href="#" onclick="S.view='route';render();return false">route and schedule</a>.</p></div>`;
+            if (m.verified === "pending") return `<h2>Verification pending</h2><p class="sub">A moderator is reviewing your details. Switch to “Moderator” at the top to approve it for this demo.</p><div class="card"><span class="tag wa">Pending review</span> <b>${esc(m.name)}</b></div>`;
+            return `<h2>Verify your identity</h2><p class="sub">Only verified neighbours can see matches, request rides, or offer seats.</p>
+ <div class="card"><label for="vn">Full name</label><input id="vn" autocomplete="name">
+ <label for="vp">Mobile number</label><input id="vp" inputmode="tel" placeholder="10 digits">
+ <label for="vd">ID document</label><select id="vd"><option>Aadhaar</option><option>Driving licence</option><option>Employee ID</option><option>College ID</option></select>
+ <label for="vi">Last 4 digits of ID number</label><input id="vi" maxlength="4" inputmode="numeric">
+ <label class="chk"><input type="checkbox" id="vc"> I agree to the community safety rules</label>
+ <p><button class="b p" onclick="submitVerify()">Submit for review</button></p></div>`;
+        }
+        function submitVerify() {
+            const n = $("#vn").value.trim(), p = $("#vp").value.trim(), i = $("#vi").value.trim();
+            if (n.length < 2) return toast("Enter your full name.");
+            if (!/^\d{10}$/.test(p)) return toast("Mobile number must be 10 digits.");
+            if (!/^\d{4}$/.test(i)) return toast("Enter the last 4 digits of your ID.");
+            if (!$("#vc").checked) return toast("Please accept the safety rules.");
+            S.me.name = n; S.me.id = "me"; S.me.verified = "pending";
+            S.queue.unshift({ id: "me", name: n, doc: $("#vd").value + " ••" + i }); toast("Submitted for review."); render();
+        }
+
+
+        function route() {
+            const r = S.me.route || { from: "Maple Park", to: "City Centre", time: "08:15", days: ["Mon", "Tue", "Wed", "Thu", "Fri"], role: "rider" }, p = S.me.prefs;
+            const opt = v => ZONES.map(z => `<option ${z === v ? "selected" : ""}>${z}</option>`).join("");
+            return `<h2>Route & schedule</h2><p class="sub">Matches are based on shared stops, departure time, and your preferences.</p>
+ <div class="card"><div class="grid"><div><label for="rf">From</label><select id="rf">${opt(r.from)}</select></div><div><label for="rt">To</label><select id="rt">${opt(r.to)}</select></div>
+ <div><label for="rh">Departure time</label><input type="time" id="rh" value="${r.time}"></div>
+ <div><label for="rr">I want to</label><select id="rr"><option value="rider" ${r.role === "rider" ? "selected" : ""}>Join a ride (rider)</option><option value="driver" ${r.role === "driver" ? "selected" : ""}>Offer seats (driver)</option></select></div></div>
+ <label>Days</label><div class="days">${DAYS.map(d => `<label><input type="checkbox" name="rd" value="${d}" ${r.days.includes(d) ? "checked" : ""}>${d}</label>`).join("")}</div>
+ <label>Preferences</label>
+ <label class="chk"><input type="checkbox" id="pn" ${p.noSmoke ? "checked" : ""}> Non-smoking vehicle</label>
+ <label class="chk"><input type="checkbox" id="pq" ${p.quiet ? "checked" : ""}> Quiet ride</label>
+ <label class="chk"><input type="checkbox" id="pw" ${p.womenOnly ? "checked" : ""}> Women-only matches</label>
+ <p><button class="b p" onclick="saveRoute()">Save and find matches</button></p></div>`;
+        }
+        function saveRoute() {
+            const from = $("#rf").value, to = $("#rt").value, days = [...document.querySelectorAll("[name=rd]:checked")].map(x => x.value);
+            if (from === to) return toast("Start and destination must differ.");
+            if (!days.length) return toast("Pick at least one day.");
+            S.me.route = { from, to, time: $("#rh").value || "08:00", days, role: $("#rr").value };
+            S.me.prefs = { noSmoke: $("#pn").checked, quiet: $("#pq").checked, womenOnly: $("#pw").checked };
+            toast("Route saved."); S.view = "match"; render();
+        }
+
+
+        function match() {
+            if (S.me.verified !== "verified") return gate("Verify your identity first", "Matching opens once a moderator approves your details.", "verify", "Go to verification");
+            if (!S.me.route) return gate("Add your route", "Tell us where and when you travel.", "route", "Add route");
+            const r = S.me.route;
+            const list = S.members.map(m => ({ m, s: score(m) })).filter(x => x.s !== null).sort((a, b) => b.s - a.s);
+            return `<h2>Matches</h2><p class="sub">${esc(r.from)} to ${esc(r.to)} around ${r.time}. Showing ${r.role === "rider" ? "drivers" : "riders"} only.</p>` +
+                (list.length ? list.map(({ m, s }) => {
+                    const sent = S.reqs.find(q => q.mid === m.id && q.st !== "cancelled" && q.st !== "declined");
+                    return `<div class="card"><div class="row sp"><div class="row"><h3>${esc(m.name)}</h3><span class="tag ok">Verified</span><span class="tag">★ ${m.rating.toFixed(1)} (${m.n} trips)</span></div>
+  <div class="row"><div class="bar" title="${s}% match"><div style="width:${s}%"></div></div><b>${s}%</b></div></div>
+  <div class="path">${m.path.map((z, i) => `${i ? "<i>›</i>" : ""}<span class="${z === r.from || z === r.to ? "on" : ""}">${z}</span>`).join("")}</div>
+  <div class="row"><span class="tag">${m.time}</span><span class="tag">${m.days.join(" ")}</span>${m.quiet ? '<span class="tag">Quiet</span>' : ""}${m.smoker ? '<span class="tag wa">Smoker</span>' : '<span class="tag">Non-smoking</span>'}<span class="tag">${m.role === "driver" ? m.seats + " seats" : "Rider"}</span></div>
+  <div class="row" style="margin-top:12px">${sent ? `<span class="tag wa">Request ${sent.st}</span>` : `<button class="b p" onclick="request('${m.id}')">${r.role === "rider" ? "Request to join" : "Offer a seat"}</button>`}
+  <button class="b s" onclick="reportDlg('${m.id}')">Report</button><button class="b s d" onclick="block('${m.id}')">Block</button></div></div>`
+                }).join("") : `<div class="empty">No compatible matches yet. Try a wider time or fewer preferences.</div>`);
+        }
+        function gate(t, d, v, b) { return `<div class="card empty"><h3>${t}</h3><p>${d}</p><button class="b p" onclick="S.view='${v}';render()">${b}</button></div>` }
+        function request(id) { S.reqs.unshift({ id: "r" + (S._n++), mid: id, st: "pending", step: 0, rated: false }); toast("Request sent to " + mem(id).name + "."); render() }
+        function block(id) { if (!confirm("Block " + mem(id).name + "? You won’t see each other in matches.")) return; S.blocked.push(id); S.reqs.forEach(q => { if (q.mid === id && q.step < 3 && q.st !== "declined") q.st = "cancelled" }); toast("Blocked."); render() }
+
+
+        function trips() {
+            if (S.me.verified !== "verified") return gate("Verify your identity first", "Trips are available after verification.", "verify", "Go to verification");
+            const list = S.reqs.filter(q => q.step < 3 || q.st !== "accepted");
+            return `<h2>Join requests & trip status</h2><p class="sub">Requests move from pending to accepted, then through each trip stage.</p>` +
+                (list.length ? list.map(q => {
+                    const m = mem(q.mid);
+                    let body = "";
+                    if (q.st === "pending") body = `<span class="tag wa">Waiting for ${esc(m.name)}</span><button class="b s" onclick="sim('${q.id}',true)">Demo: they accept</button><button class="b s" onclick="sim('${q.id}',false)">Demo: they decline</button><button class="b s d" onclick="cancel('${q.id}')">Withdraw</button>`;
+                    else if (q.st === "accepted") body = `<div style="width:100%"><div class="steps">${STEPS.map((s, i) => `<div class="${i <= q.step ? "done" : ""}">${s}</div>`).join("")}</div><div class="row"><button class="b p" onclick="adv('${q.id}')">Mark: ${STEPS[q.step + 1]}</button><button class="b s d" onclick="cancel('${q.id}')">Cancel trip</button><button class="b s" onclick="reportDlg('${m.id}')">Report</button></div></div>`;
+                    else body = `<span class="tag ${q.st === "declined" ? "no" : ""}">${q.st === "declined" ? "Declined" : "Cancelled"}</span>`;
+                    return `<div class="card"><div class="row sp"><h3>${esc(m.name)}</h3><span class="tag">${S.me.route.from} › ${S.me.route.to}, ${m.time}</span></div><div class="row" style="margin-top:8px">${body}</div></div>`
+                }).join("") : `<div class="empty">No requests yet. Find a partner in Matches.</div>`);
+        }
+        function sim(id, yes) { const q = S.reqs.find(x => x.id === id); q.st = yes ? "accepted" : "declined"; toast(yes ? "Request accepted. Trip scheduled." : "Request declined."); render() }
+        function cancel(id) { const q = S.reqs.find(x => x.id === id); q.st = "cancelled"; toast("Cancelled."); render() }
+        function adv(id) { const q = S.reqs.find(x => x.id === id); q.step++; if (q.step === 3) { toast("Trip complete. Please rate it."); S.view = "hist" } render() }
+
+
+        function hist() {
+            const done = S.reqs.filter(q => q.st === "accepted" && q.step === 3);
+            return `<h2>Trip history</h2><p class="sub">Rate completed trips to keep the community trustworthy.</p>` +
+                (done.length ? done.map(q => {
+                    const m = mem(q.mid);
+                    return `<div class="card"><div class="row sp"><h3>${esc(m.name)}</h3><span class="tag ok">Completed</span></div>
+  ${q.rated ? `<p>You rated this trip ${"★".repeat(q.stars)}${"☆".repeat(5 - q.stars)}${q.note ? `<br><span class="sub">“${esc(q.note)}”</span>` : ""}</p>` :
+                            `<div class="stars" id="st-${q.id}" role="group" aria-label="Rating">${[1, 2, 3, 4, 5].map(n => `<button aria-label="${n} stars" onclick="setStar('${q.id}',${n})">★</button>`).join("")}</div>
+  <label for="nt-${q.id}">Comment (optional)</label><input id="nt-${q.id}" maxlength="120"><p><button class="b p" onclick="rate('${q.id}')">Submit rating</button></p>`}
+  <div class="row"><button class="b s" onclick="reportDlg('${m.id}')">Report</button><button class="b s d" onclick="block('${m.id}')">Block</button></div></div>`
+                }).join("") : `<div class="empty">Completed trips will appear here.</div>`);
+        }
+        function setStar(id, n) { const q = S.reqs.find(x => x.id === id); q.stars = n; document.querySelectorAll(`#st-${id} button`).forEach((b, i) => b.classList.toggle("f", i < n)) }
+        function rate(id) {
+            const q = S.reqs.find(x => x.id === id); if (!q.stars) return toast("Choose a star rating.");
+            q.note = $("#nt-" + id).value.trim(); q.rated = true; const m = mem(q.mid); m.rating = (m.rating * m.n + q.stars) / (m.n + 1); m.n++; toast("Thanks for rating."); render()
+        }
+
+
+        function reportDlg(id) {
+            const m = mem(id); $("#dform").innerHTML = `<h3>Report ${esc(m.name)}</h3><label for="rs">Reason</label><select id="rs"><option>Unsafe driving</option><option>Harassment</option><option>No-show</option><option>Fake identity</option><option>Other</option></select>
+ <label for="rn">Details</label><textarea id="rn" rows="3"></textarea><div class="row" style="margin-top:12px"><button class="b p" value="go" onclick="return sendReport('${id}')">Send report</button><button class="b" value="x">Cancel</button></div>`;
+            $("#dlg").showModal();
+        }
+        function sendReport(id) { S.reports.unshift({ id: "p" + (S._n++), mid: id, why: $("#rs").value, note: $("#rn").value.trim(), st: "open" }); $("#dlg").close(); toast("Report sent to moderators."); return false }
+        function mod() {
+            const q = S.queue, rp = S.reports;
+            return `<h2>Moderation</h2><p class="sub">Review identity checks and user reports.</p><h3>Verification queue</h3>` +
+                (q.length ? q.map(x => `<div class="card row sp"><div><b>${esc(x.name)}</b><br><span class="sub">${esc(x.doc)}</span></div><div class="row"><button class="b p s" onclick="vr('${x.id}',true)">Approve</button><button class="b s d" onclick="vr('${x.id}',false)">Reject</button></div></div>`).join("") : `<div class="card empty">Queue is clear.</div>`) +
+                `<h3 style="margin-top:20px">Reports</h3>` +
+                (rp.length ? rp.map(x => {
+                    const m = mem(x.mid); return `<div class="card"><div class="row sp"><b>${esc(m.name)}: ${esc(x.why)}</b><span class="tag ${x.st === "open" ? "wa" : "ok"}">${x.st}</span></div>${x.note ? `<p class="sub">${esc(x.note)}</p>` : ""}
+ ${x.st === "open" ? `<div class="row"><button class="b s" onclick="act('${x.id}','warned')">Warn</button><button class="b s d" onclick="act('${x.id}','suspended')">Suspend user</button><button class="b s" onclick="act('${x.id}','dismissed')">Dismiss</button></div>` : ""}</div>`
+                }).join("") : `<div class="card empty">No reports.</div>`);
+        }
+        function vr(id, yes) { S.queue = S.queue.filter(x => x.id !== id); if (id === "me") S.me.verified = yes ? "verified" : "none"; toast(yes ? "Approved." : "Rejected."); render() }
+        function act(id, st) { const x = S.reports.find(r => r.id === id); x.st = st; if (st === "suspended") mem(x.mid).susp = true; toast("Report " + st + "."); render() }
+        render();
+    </script>
+</body>
+
+</html>
